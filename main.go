@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/binary"
-	"flag"
+	"encoding/json"
 	"fmt"
 	"github.com/DataDog/zstd"
 	"log"
@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	V2FSEQ_HEADER_SIZE = 32 //copied from https://github.com/smeighan/xLights/blob/master/xLights/FSEQFile.cpp#L675
+	V2FSEQ_HEADER_SIZE = 32 //copied from https://github.com/smeighan/xLights/blob/15f42b39a38861564518c353b9e3f24ee790de05/xLights/FSEQFile.cpp#L710
 )
 
 //type CompressionType uint8
@@ -20,6 +20,7 @@ const (
 	CompressionType_zlib = 2
 )
 
+// FSEQ file format: https://github.com/FalconChristmas/fpp/blob/master/docs/FSEQ_Sequence_File_Format.txt
 type fseqHeader struct {
 	//0-3 - file identifier, must be 'PSEQ'
 	Magic [4]byte
@@ -58,7 +59,9 @@ type fseqv2Header struct {
 	Identifier uint64
 }
 
-//numberOfBlocks*8 - compress block index
+//numberOfBlocks (8bytes) - compress block index
+
+// this is used to parse fseq blocks once uncompressed
 type fseqv2_block struct {
 	//0-3 - frame number
 	FrameNum uint32
@@ -66,25 +69,54 @@ type fseqv2_block struct {
 	BlockLen uint32
 }
 
-//numberOfSparseRanges*6 - sparse range definitions
-//type fseqv2_sparse struct {
-//	//0-2 - start channel number
-//	startChan
-//	//3-5 - number of channels
-//}
+// It seems like sparse ranges may be created as a part of the FPP Connect utility
 
+//numberOfSparseRanges (6bytes) - sparse range definitions
+type fseqv2_sparse struct {
+	//0-2 - start channel number
+	StartChan [3]byte
+	//3-5 - number of channels
+	NumChan [3]byte
+}
+
+// When parsing the blocks, we will calculate the offset and store it
+// a block is a group of frames
 type block struct {
-	BlockNum    uint32
-	BlockOffset uint32
-	BlockLen    uint32
+	StartFrameNum      uint32
+	BlockOffset        uint32
+	BlockCompressedLen uint32
+}
+
+func printStructJson(prefix string, v interface{})  {
+	jsonStr, err := json.MarshalIndent(v, "", "    ")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	fmt.Printf("%s %s\n", prefix, jsonStr)
+}
+
+type Frame struct {
+	FrameNum uint32
+	Data []byte
 }
 
 func main() {
 	//flag.String("file", )
 
-	flag.Parse()
+	//flag.Parse()
+	//
+	//fileName := flag.Arg(0)
 
-	fileName := flag.Arg(0)
+	//fileName := "samples/xlights/test1.fseq"
+	//fileName := "samples/xlights/test2-3000.fseq"
+
+	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2.fseq"
+	fileName := "samples/Carol of the Bells - Trans-Siberian Orchestra v2 master.fseq"
+	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2 renard01.fseq"
+	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2 pixels.fseq"
+
+
+	fmt.Printf("\n\nProcessing File: %s\n", fileName)
 
 	if len(fileName) <= 0 {
 		panic("usage")
@@ -94,11 +126,12 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer fp.Close()
 
 	header := fseqHeader{}
 
 	err = binary.Read(fp, binary.LittleEndian, &header)
-	if err != nil {
+	if err != nil { //@todo this will error if the file doesn't match right?
 		panic(err)
 	}
 
@@ -113,7 +146,8 @@ func main() {
 		panic("Expected PSEQ magic")
 	}
 
-	fmt.Printf("HEADER: %+v\n", header)
+	printStructJson("Header:", header)
+	//fmt.Printf("HEADER: %+v\n", header)
 
 	v2hdr := fseqv2Header{}
 
@@ -122,11 +156,12 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("HEADER v2: %+v\n", v2hdr)
+	printStructJson("Header v2:", v2hdr)
+	//fmt.Printf("HEADER v2: %+v\n", v2hdr)
 
-	if v2hdr.NumSparseRanges > 0 {
-		panic("sparse ranges are unsupported")
-	}
+	//if v2hdr.NumSparseRanges > 0 {
+	//	panic("sparse ranges are unsupported")
+	//}
 
 	// move the pointer to the end of the header
 	_, err = fp.Seek(int64(V2FSEQ_HEADER_SIZE), 0)
@@ -134,6 +169,7 @@ func main() {
 		panic(err)
 	}
 
+	// This is a slice of the blocks we have decoded in the file
 	blocks := []block{}
 
 	offset := uint32(header.OffsetToChanData)
@@ -145,11 +181,11 @@ func main() {
 		}
 
 		if blk.BlockLen > 0 {
-			//fmt.Printf("IDX:%d \t %+v \t Start: %d \t End: %d\n", blockNum, blk, offset, offset+blk.BlockLen)
+			//fmt.Printf("IDX:%d \t %+v \t Start: %d \t End: %d\n", blockNum, blk, offset, offset+blk.BlockCompressedLen)
 			blocks = append(blocks, block{
-				BlockNum:    blk.FrameNum,
-				BlockOffset: offset,
-				BlockLen:    blk.BlockLen,
+				StartFrameNum:      blk.FrameNum,
+				BlockOffset:        offset,
+				BlockCompressedLen: blk.BlockLen,
 			})
 			offset += blk.BlockLen
 		} else {
@@ -159,12 +195,13 @@ func main() {
 	//                                             why is this +2 ?
 	//fmt.Printf("IDX:%d\t%+v\t%d\n", -1, v2hdr.NumFrames+2, offset)
 	//blocks = append(blocks, block{
-	//	BlockNum: v2hdr.NumFrames + 2,
+	//	StartFrameNum: v2hdr.NumFrames + 2,
 	//	BlockOffset: offset,
-	//	BlockLen:    blk.FrameNum,
+	//	BlockCompressedLen:    blk.FrameNum,
 	//})
 
-	fmt.Printf("Blocks: %+v\n", blocks)
+	//fmt.Printf("Blocks: %+v\n", blocks)
+	printStructJson("Blocks:", blocks)
 
 	//sparse ranges @todo
 	//for (int x = 0; x < header[22]; x++) {
@@ -195,18 +232,49 @@ func main() {
 		//panic("none compression type not supported")
 	case CompressionType_zstd:
 		for _, blk := range blocks {
-			fmt.Printf("Processing block: %d", blk.BlockNum)
-			compressedData := make([]byte, blk.BlockLen)
+			fmt.Printf("Decompressing block: %d\n", blk.StartFrameNum)
+			compressedData := make([]byte, blk.BlockCompressedLen)
 			_, err = fp.ReadAt(compressedData, int64(blk.BlockOffset))
 			if err != nil {
 				panic(err)
 			}
-			data, err := zstd.Decompress(nil, compressedData)
+			blockValues, err := zstd.Decompress(nil, compressedData)
 			if err != nil {
 				panic(err)
 			}
-			fmt.Printf("Block: %+v", data)
-			return
+
+
+			numFramesInBlock := uint32(len(blockValues)) / v2hdr.NumChannelsPerFrame
+
+			fmt.Printf("TotalChan: %d NumFramesInBlk: %d\n", len(blockValues), numFramesInBlock)
+
+			// for each frame in the block
+			//for frameIdx := uint32(0); frameIdx < numFramesInBlock; frameIdx ++ {
+			//	//fmt.Printf("low: %d\thigh: %d\n", frameIdx*v2hdr.NumChannelsPerFrame, frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1)
+			//	low := frameIdx*v2hdr.NumChannelsPerFrame
+			//	high :=frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1
+			//	newFrame := Frame{
+			//		FrameNum: frameIdx+1,
+			//		Data:     blockValues[low:high],
+			//	}
+			//	fmt.Printf("Frame: %+v\n", newFrame)
+			//	//printStructJson("Frame:", newFrame)
+			//}
+
+			//for a := range len(blockValues) / v2hdr.NumChannelsPerFrame
+			//{
+			//
+			//}
+			//for chanIdx, value := range data {
+			//	newFrame := Frame{
+			//		FrameNum: uint32(chanIdx) % v2hdr.NumChannelsPerFrame,
+			//		Data:     nil,
+			//	}
+			//	fmt.Printf("chan: %d val: %d\n", , value)
+			//
+			//}
+			//fmt.Printf("Block: %+v", data)
+			//return
 		}
 
 	case CompressionType_zlib:
