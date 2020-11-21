@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsequence BaseChannel="0" ChanCtrlBasic="0" ChanCtrlColor="0" FixedPointTiming="1" ModelBlending="true">
+  <head>
+    <version>2020.47</version>
+    <author></author>
+    <author-email></author-email>
+    <author-website></author-website>
+    <song></song>
+    <artist></artist>
+    <album></album>
+    <MusicURL></MusicURL>
+    <comment></comment>
+    <sequenceTiming>50 ms</sequenceTiming>
+    <sequenceType>Animation</sequenceType>
+    <mediaFile></mediaFile>
+    <sequenceDuration>30.000</sequenceDuration>
+    <imageDir></imageDir>
+  </head>
+  <nextid>1</nextid>
+  <Jukebox/>
+  <ColorPalettes>
+    <ColorPalette>C_BUTTON_Palette1=#FFFFFF,C_CHECKBOX_Palette1=1</ColorPalette>
+  </ColorPalettes>
+  <EffectDB>
+    <Effect></Effect>
+  </EffectDB>
+  <DataLayers>
+    <DataLayer lor_params="16" channel_offset="0" num_channels="0" num_frames="0" data="&lt;rendered: erase-mode&gt;" source="&lt;auto-generated&gt;" name="Nutcracker"/>
+  </DataLayers>
+  <DisplayElements>
+    <Element collapsed="0" type="timing" name="New Timing" visible="1" views="Master View" active="1"/>
+    <Element collapsed="0" type="model" name="Channel Block" visible="1"/>
+  </DisplayElements>
+  <ElementEffects>
+    <Element type="timing" name="New Timing">
+      <EffectLayer>
+        <Effect label="" startTime="0" endTime="0"></Effect>
+        <Effect label="" startTime="0" endTime="5000"></Effect>
+        <Effect label="" startTime="5000" endTime="10100"></Effect>
+        <Effect label="" startTime="10100" endTime="15050"></Effect>
+        <Effect label="" startTime="15050" endTime="20050"></Effect>
+        <Effect label="" startTime="20050" endTime="25050"></Effect>
+        <Effect label="" startTime="25050" endTime="30000"></Effect>
+      </EffectLayer>
+    </Element>
+    <Element type="model" name="Channel Block">
+      <EffectLayer/>
+      <Strand index="0">
+        <Effect ref="0" name="On" selected="1" startTime="0" endTime="5000" palette="0"/>
+      </Strand>
+      <Strand index="1">
+        <Effect ref="0" name="On" startTime="1650" endTime="6650" palette="0"/>
+      </Strand>
+      <Strand index="2">
+        <Effect ref="0" name="On" startTime="3350" endTime="8350" palette="0"/>
+      </Strand>
+      <Strand index="3">
+        <Effect ref="0" name="On" startTime="5000" endTime="10000" palette="0"/>
+      </Strand>
+      <Strand index="4">
+        <Effect ref="0" name="On" startTime="6650" endTime="11650" palette="0"/>
+      </Strand>
+      <Strand index="5">
+        <Effect ref="0" name="On" startTime="8350" endTime="13350" palette="0"/>
+      </Strand>
+      <Strand index="6">
+        <Effect ref="0" name="On" startTime="10000" endTime="15000" palette="0"/>
+      </Strand>
+      <Strand index="7">
+        <Effect ref="0" name="On" startTime="11650" endTime="16650" palette="0"/>
+      </Strand>
+      <Strand index="8">
+        <Effect ref="0" name="On" startTime="13350" endTime="18350" palette="0"/>
+      </Strand>
+      <Strand index="9">
+        <Effect ref="0" name="On" startTime="15000" endTime="20000" palette="0"/>
+      </Strand>
+      <Strand index="10">
+        <Effect ref="0" name="On" startTime="16650" endTime="21650" palette="0"/>
+      </Strand>
+      <Strand index="11">
+        <Effect ref="0" name="On" startTime="18350" endTime="23350" palette="0"/>
+      </Strand>
+      <Strand index="12">
+        <Effect ref="0" name="On" startTime="20000" endTime="25000" palette="0"/>
+      </Strand>
+      <Strand index="13">
+        <Effect ref="0" name="On" startTime="21650" endTime="26650" palette="0"/>
+      </Strand>
+      <Strand index="14">
+        <Effect ref="0" name="On" startTime="23300" endTime="28300" palette="0"/>
+      </Strand>
+      <Strand index="15">
+        <Effect ref="0" name="On" startTime="25000" endTime="30000" palette="0"/>
+      </Strand>
+    </Element>
+  </ElementEffects>
+  <lastView>0</lastView>
+  <TimingTags>
+    <Tag number="0" position="-1"/>
+    <Tag number="1" position="-1"/>
+    <Tag number="2" position="-1"/>
+    <Tag number="3" position="-1"/>
+    <Tag number="4" position="-1"/>
+    <Tag number="5" position="-1"/>
+    <Tag number="6" position="-1"/>
+    <Tag number="7" position="-1"/>
+    <Tag number="8" position="-1"/>
+    <Tag number="9" position="-1"/>
+  </TimingTags>
+</xsequence>

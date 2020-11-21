@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsequence BaseChannel="0" ChanCtrlBasic="0" ChanCtrlColor="0" FixedPointTiming="1" ModelBlending="true">
+  <head>
+    <version>2020.47</version>
+    <author></author>
+    <author-email></author-email>
+    <author-website></author-website>
+    <song></song>
+    <artist></artist>
+    <album></album>
+    <MusicURL></MusicURL>
+    <comment></comment>
+    <sequenceTiming>50 ms</sequenceTiming>
+    <sequenceType>Animation</sequenceType>
+    <mediaFile></mediaFile>
+    <sequenceDuration>3000.0</sequenceDuration>
+    <imageDir></imageDir>
+  </head>
+  <nextid>1</nextid>
+  <Jukebox/>
+  <ColorPalettes>
+    <ColorPalette>C_BUTTON_Palette1=#FFFFFF,C_CHECKBOX_Palette1=1</ColorPalette>
+  </ColorPalettes>
+  <EffectDB>
+    <Effect></Effect>
+  </EffectDB>
+  <DataLayers>
+    <DataLayer lor_params="41" channel_offset="0" num_channels="0" num_frames="0" data="&lt;rendered: erase-mode&gt;" source="&lt;auto-generated&gt;" name="Nutcracker"/>
+  </DataLayers>
+  <DisplayElements>
+    <Element collapsed="0" type="timing" name="New Timing" visible="1" views="Master View" active="1"/>
+    <Element collapsed="0" type="model" name="Channel Block" visible="1"/>
+  </DisplayElements>
+  <ElementEffects>
+    <Element type="timing" name="New Timing">
+      <EffectLayer>
+        <Effect label="" startTime="0" endTime="30200"></Effect>
+        <Effect label="" startTime="30200" endTime="180200"></Effect>
+        <Effect label="" startTime="180200" endTime="2890400"></Effect>
+        <Effect label="" startTime="2890400" endTime="2900400"></Effect>
+        <Effect label="" startTime="2900400" endTime="2999600"></Effect>
+      </EffectLayer>
+    </Element>
+    <Element type="model" name="Channel Block">
+      <EffectLayer/>
+      <Strand index="0">
+        <Effect ref="0" name="On" startTime="0" endTime="30200" palette="0"/>
+        <Effect ref="0" name="On" selected="1" id="1" startTime="2890400" endTime="2900400" palette="0"/>
+      </Strand>
+      <Strand index="1">
+        <Effect ref="0" name="On" startTime="10000" endTime="40200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2897000" endTime="2907000" palette="0"/>
+      </Strand>
+      <Strand index="2">
+        <Effect ref="0" name="On" startTime="20000" endTime="50200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2903650" endTime="2913650" palette="0"/>
+      </Strand>
+      <Strand index="3">
+        <Effect ref="0" name="On" startTime="30000" endTime="60200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2910250" endTime="2920250" palette="0"/>
+      </Strand>
+      <Strand index="4">
+        <Effect ref="0" name="On" startTime="40000" endTime="70200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2916850" endTime="2926850" palette="0"/>
+      </Strand>
+      <Strand index="5">
+        <Effect ref="0" name="On" startTime="50000" endTime="80200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2923450" endTime="2933450" palette="0"/>
+      </Strand>
+      <Strand index="6">
+        <Effect ref="0" name="On" startTime="60000" endTime="90200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2930100" endTime="2940100" palette="0"/>
+      </Strand>
+      <Strand index="7">
+        <Effect ref="0" name="On" startTime="70000" endTime="100200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2936700" endTime="2946700" palette="0"/>
+      </Strand>
+      <Strand index="8">
+        <Effect ref="0" name="On" startTime="80000" endTime="110200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2943300" endTime="2953300" palette="0"/>
+      </Strand>
+      <Strand index="9">
+        <Effect ref="0" name="On" startTime="90000" endTime="120200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2949900" endTime="2959900" palette="0"/>
+      </Strand>
+      <Strand index="10">
+        <Effect ref="0" name="On" startTime="100000" endTime="130200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2956550" endTime="2966550" palette="0"/>
+      </Strand>
+      <Strand index="11">
+        <Effect ref="0" name="On" startTime="110000" endTime="140200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2963150" endTime="2973150" palette="0"/>
+      </Strand>
+      <Strand index="12">
+        <Effect ref="0" name="On" startTime="120000" endTime="150200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2969750" endTime="2979750" palette="0"/>
+      </Strand>
+      <Strand index="13">
+        <Effect ref="0" name="On" startTime="130000" endTime="160200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2976350" endTime="2986350" palette="0"/>
+      </Strand>
+      <Strand index="14">
+        <Effect ref="0" name="On" startTime="140000" endTime="170200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2983000" endTime="2993000" palette="0"/>
+      </Strand>
+      <Strand index="15">
+        <Effect ref="0" name="On" startTime="150000" endTime="180200" palette="0"/>
+        <Effect ref="0" name="On" id="1" startTime="2989600" endTime="2999600" palette="0"/>
+      </Strand>
+    </Element>
+  </ElementEffects>
+  <lastView>0</lastView>
+  <TimingTags>
+    <Tag number="0" position="-1"/>
+    <Tag number="1" position="-1"/>
+    <Tag number="2" position="-1"/>
+    <Tag number="3" position="-1"/>
+    <Tag number="4" position="-1"/>
+    <Tag number="5" position="-1"/>
+    <Tag number="6" position="-1"/>
+    <Tag number="7" position="-1"/>
+    <Tag number="8" position="-1"/>
+    <Tag number="9" position="-1"/>
+  </TimingTags>
+</xsequence>
