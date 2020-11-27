@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/DataDog/zstd"
+	"io"
 	"log"
 	"os"
 )
@@ -57,9 +58,11 @@ type fseqv2Header struct {
 	Flags2 uint8
 	//24-31 - 64bit unique identifier, likely a timestamp or uuid
 	Identifier uint64
+
+	//numberOfBlocks * 8bytes - compress block definitions
+	//numberOfSparseRanges * 6bytes - sparse range definitions
 }
 
-//numberOfBlocks (8bytes) - compress block index
 
 // this is used to parse fseq blocks once uncompressed
 type fseqv2_block struct {
@@ -69,16 +72,6 @@ type fseqv2_block struct {
 	BlockLen uint32
 }
 
-// It seems like sparse ranges may be created as a part of the FPP Connect utility
-
-//numberOfSparseRanges (6bytes) - sparse range definitions
-type fseqv2_sparse struct {
-	//0-2 - start channel number
-	StartChan [3]byte
-	//3-5 - number of channels
-	NumChan [3]byte
-}
-
 // When parsing the blocks, we will calculate the offset and store it
 // a block is a group of frames
 type block struct {
@@ -86,6 +79,26 @@ type block struct {
 	BlockOffset        uint32
 	BlockCompressedLen uint32
 }
+
+// It seems like sparse ranges may be created as a part of the FPP Connect utility
+// this struct is used to parse sparse blocks
+type fseqv2_sparse struct {
+	//0-2 - start channel number
+	StartChan [3]byte
+	//3-5 - number of channels
+	NumChan [3]byte
+}
+
+type sparseBlock struct {
+	StartChan uint32
+	NumChan uint32 //aka length
+}
+
+type varHeader struct {
+	Length uint16
+	Magic [2]byte
+}
+
 
 func printStructJson(prefix string, v interface{})  {
 	jsonStr, err := json.MarshalIndent(v, "", "    ")
@@ -111,9 +124,9 @@ func main() {
 	//fileName := "samples/xlights/test2-3000.fseq"
 
 	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2.fseq"
-	fileName := "samples/Carol of the Bells - Trans-Siberian Orchestra v2 master.fseq"
-	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2 renard01.fseq"
-	//fileName := "Carol of the Bells - Trans-Siberian Orchestra v2 pixels.fseq"
+	//fileName := "samples/Carol of the Bells - Trans-Siberian Orchestra v2 master.fseq"
+	//fileName := "samples/Carol of the Bells - Trans-Siberian Orchestra v2 renard01.fseq"
+	fileName := "samples/Carol of the Bells - Trans-Siberian Orchestra v2 pixels.fseq"
 
 
 	fmt.Printf("\n\nProcessing File: %s\n", fileName)
@@ -157,11 +170,6 @@ func main() {
 	}
 
 	printStructJson("Header v2:", v2hdr)
-	//fmt.Printf("HEADER v2: %+v\n", v2hdr)
-
-	//if v2hdr.NumSparseRanges > 0 {
-	//	panic("sparse ranges are unsupported")
-	//}
 
 	// move the pointer to the end of the header
 	_, err = fp.Seek(int64(V2FSEQ_HEADER_SIZE), 0)
@@ -192,16 +200,74 @@ func main() {
 			//block with zero length data
 		}
 	}
-	//                                             why is this +2 ?
-	//fmt.Printf("IDX:%d\t%+v\t%d\n", -1, v2hdr.NumFrames+2, offset)
-	//blocks = append(blocks, block{
-	//	StartFrameNum: v2hdr.NumFrames + 2,
-	//	BlockOffset: offset,
-	//	BlockCompressedLen:    blk.FrameNum,
-	//})
-
-	//fmt.Printf("Blocks: %+v\n", blocks)
 	printStructJson("Blocks:", blocks)
+
+	// This is a slice of the blocks we have decoded in the file
+	sparseRanges := []sparseBlock{}
+
+	for sparseBlockNum := uint8(0); sparseBlockNum < v2hdr.NumSparseRanges; sparseBlockNum++ {
+		blk := fseqv2_sparse{}
+		err = binary.Read(fp, binary.LittleEndian, &blk)
+		if err != nil {
+			panic(err)
+		}
+
+		var startChan []byte
+		var numChan []byte
+
+		startChan = append(startChan, blk.StartChan[:]...)
+		startChan = append(startChan, 0x00)
+		numChan = append(numChan, blk.NumChan[:]...)
+		numChan = append(numChan, 0x00)
+
+		sparseRanges = append(sparseRanges, sparseBlock{
+			StartChan: binary.LittleEndian.Uint32(startChan),
+			NumChan:   binary.LittleEndian.Uint32(numChan),
+		})
+	}
+
+	printStructJson("SparseRanges:", sparseRanges)
+	readPos, err := fp.Seek(0, io.SeekCurrent) //using this to get current position
+	if err != nil {
+		panic(err)
+	}
+	if readPos != int64(v2hdr.HeaderLen) {
+		log.Fatalf("Read position (%d) does not match expected header size %d!\n", readPos, v2hdr.HeaderLen)
+	}
+
+	// START - PARSE VARIABLE
+
+	varHdr1 := varHeader{}
+	err = binary.Read(fp, binary.LittleEndian, &varHdr1)
+	if err != nil {
+		panic(err)
+	}
+
+	varHdrVal1 := make([]byte, varHdr1.Length-4) //4 b/c of the 'm' 'f' 2 bytes each
+
+	_, err = fp.Read(varHdrVal1)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("Var1: len:%d magic: %s val: '%s' len:%d",varHdr1.Length, varHdr1.Magic, varHdrVal1, len(varHdrVal1))
+
+	//printStructJson("VarHeader1:", varHdr1)
+	//
+	//varHdr2 := varHeader{}
+	//err = binary.Read(fp, binary.LittleEndian, &varHdr2)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//
+	//printStructJson("VarHeader1:", varHdr2)
+
+
+
+	// END   - PARSE VARIABLE
+
+
+	os.Exit(1)
 
 	//sparse ranges @todo
 	//for (int x = 0; x < header[22]; x++) {
@@ -231,8 +297,8 @@ func main() {
 		//
 		//panic("none compression type not supported")
 	case CompressionType_zstd:
-		for _, blk := range blocks {
-			fmt.Printf("Decompressing block: %d\n", blk.StartFrameNum)
+		for idx, blk := range blocks {
+			fmt.Printf("Decompressing block: %d\n", idx)
 			compressedData := make([]byte, blk.BlockCompressedLen)
 			_, err = fp.ReadAt(compressedData, int64(blk.BlockOffset))
 			if err != nil {
@@ -246,20 +312,21 @@ func main() {
 
 			numFramesInBlock := uint32(len(blockValues)) / v2hdr.NumChannelsPerFrame
 
-			fmt.Printf("TotalChan: %d NumFramesInBlk: %d\n", len(blockValues), numFramesInBlock)
+			fmt.Printf("    TotalChan: %d\n", len(blockValues))
+			fmt.Printf("    NumFramesInBlk: %d\n", numFramesInBlock)
 
 			// for each frame in the block
-			//for frameIdx := uint32(0); frameIdx < numFramesInBlock; frameIdx ++ {
-			//	//fmt.Printf("low: %d\thigh: %d\n", frameIdx*v2hdr.NumChannelsPerFrame, frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1)
-			//	low := frameIdx*v2hdr.NumChannelsPerFrame
-			//	high :=frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1
-			//	newFrame := Frame{
-			//		FrameNum: frameIdx+1,
-			//		Data:     blockValues[low:high],
-			//	}
-			//	fmt.Printf("Frame: %+v\n", newFrame)
-			//	//printStructJson("Frame:", newFrame)
-			//}
+			for frameIdx := uint32(0); frameIdx < numFramesInBlock; frameIdx ++ {
+				fmt.Printf("low: %d\thigh: %d\n", frameIdx*v2hdr.NumChannelsPerFrame, frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1)
+				low := frameIdx*v2hdr.NumChannelsPerFrame
+				high :=frameIdx*v2hdr.NumChannelsPerFrame+v2hdr.NumChannelsPerFrame-1
+				newFrame := Frame{
+					FrameNum: frameIdx+1,
+					Data:     blockValues[low:high],
+				}
+				fmt.Printf("Frame: %+v\n", newFrame)
+				//printStructJson("Frame:", newFrame)
+			}
 
 			//for a := range len(blockValues) / v2hdr.NumChannelsPerFrame
 			//{
